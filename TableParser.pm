@@ -64,6 +64,7 @@ sub new
   {
     $self->{ids} = [ 0 ];
     $self->{process} = 0;
+    $self->{id} =  'sentinel';
   }
 
   else
@@ -608,7 +609,7 @@ use HTML::Parser;
 
 our @ISA = qw(HTML::Parser);
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 # Preloaded methods go here.
 
@@ -619,6 +620,8 @@ our %Attr =  ( Trim => 0,
 	       DecodeNBSP => 0,
 	     );
 our @Attr = keys %Attr;
+
+our $Verbose = 0;
 
 sub new
 {
@@ -634,13 +637,14 @@ sub new
 		end_h    => [ 'end',   'self, tagname, attr, line' ],
 	       );
 
-  croak( "must specify a table request" )
+  croak( __PACKAGE__, ": must specify a table request" )
     unless  defined $reqs and 'ARRAY' eq ref $reqs;
 
   my $attr = shift || {};
 
   my @notvalid = grep { ! exists $Attr{$_} } keys %$attr;
-  croak ("Invalid attribute(s): '", join(" ,'", @notvalid ), "'\n" )
+  croak ( __PACKAGE__, ": Invalid attribute(s): '", 
+	  join(" ,'", @notvalid ), "'" )
     if @notvalid;
 
   my %attr = ( %Attr, %$attr );
@@ -677,8 +681,8 @@ sub tidy_reqs
     $nreq++;
 
     my @notvalid = grep { ! exists $ReqAttr{$_} } keys %$req;
-    croak ("table request $nreq: invalid attribute(s): '",
-	   join(" ,'", @notvalid ), "'\n" )
+    croak (__PACKAGE__, ": table request $nreq: invalid attribute(s): '",
+	   join(" ,'", @notvalid ), "'" )
       if @notvalid;
 
     my $req_id = 0;
@@ -707,7 +711,8 @@ sub tidy_reqs
 	}
 	else
 	{
-	  croak( "table request $nreq: $what must be a scalar, arrayref, or coderef\n" );
+	  croak( __PACKAGE__, 
+		 ": table request $nreq: $what must be a scalar, arrayref, or coderef" );
 	}
 	
 	# now, check that we have legal things in there
@@ -716,7 +721,8 @@ sub tidy_reqs
 	for my $match ( @reqs )
 	{
 	  my $ref = ref $match;
-	  croak( "table request $nreq: illegal $what `$match': must be a scalar, regexp, or coderef\n" )
+	  croak( __PACKAGE__, 
+		 ": table request $nreq: illegal $what `$match': must be a scalar, regexp, or coderef" )
 	    unless defined $match && ! $ref || 'Regexp' eq $ref 
 	      || 'CODE' eq $ref ;
 
@@ -761,14 +767,15 @@ sub tidy_reqs
       }
       else
       {
-	croak( "table request $nreq: colre must be a scalar or arrayref\n" );
+	croak( __PACKAGE__, 
+	       ": table request $nreq: colre must be a scalar or arrayref" );
       }
       
       for my $re ( @$colre )
       {
 	my $ref = ref $re;
 	
-	croak( "table request $nreq: colre must be a scalar\n" )
+	croak( __PACKAGE__, ": table request $nreq: colre must be a scalar" )
 	  unless ! $ref or  'Regexp' eq $ref;
 	push @{$req{cols}}, { include => 1, 
 			      match => 'Regexp' eq $ref ? $re : qr/$re/ };
@@ -777,7 +784,8 @@ sub tidy_reqs
     }
 
 
-    croak( "table request $nreq: must specify at least one id method" )
+    croak( __PACKAGE__, 
+	   ": table request $nreq: must specify at least one id method" )
       unless $req_id;
 
     $req{obj} = $req->{obj}
@@ -801,12 +809,14 @@ sub tidy_reqs
 	{
 	  if ( defined $req->{$method} )
 	  {
-	    croak( "table request $nreq: can't have object & non-scalar $method" )
+	    croak( __PACKAGE__, 
+		   ": table request $nreq: can't have object & non-scalar $method" )
 	      if ref $req->{$method};
 	    
 	    my $call = $req->{$method};
 	    
-	    croak( "table request $nreq: class doesn't have method $call" )
+	    croak( __PACKAGE__, 
+		   ": table request $nreq: class doesn't have method $call" )
 	      if ( exists $req->{obj} && ! $req->{obj}->can( $call ) )
 		|| !UNIVERSAL::can( $thing, $call );
 	  }
@@ -822,12 +832,12 @@ sub tidy_reqs
       }
       elsif( exists $req->{$method} )
       {
-	croak( "invalid callback for $method" );
+	croak( __PACKAGE__, ": invalid callback for $method" );
       }
     }
 
     # last minute cleanups for things that don't fit in the above loop
-    croak( "must specify valid constructor for class $req->{class}\n" )
+    croak( __PACKAGE__, ": must specify valid constructor for class $req->{class}" )
       if exists $req{class} && ! exists $req{new};
 
 
@@ -883,6 +893,9 @@ sub start
   my $self = shift;
   my $tagname = shift;
 
+  print STDERR __PACKAGE__, "::start : $_[1] : $tagname \n"
+    if $HTML::TableParser::Verbose;
+
   if ( 'table' eq $tagname )
   {
     $self->start_table( @_ );
@@ -901,6 +914,9 @@ sub end
 {
   my $self = shift;
   my $tagname = shift;
+
+  print STDERR __PACKAGE__, "::end : $_[1]: $tagname \n"
+    if $HTML::TableParser::Verbose;
 
   if ( 'table' eq $tagname )
   {
@@ -926,6 +942,9 @@ sub start_table
 					   $self->{Tables}[-1]->ids,
 					   $self->{reqs}, $line );
 
+  print STDERR __PACKAGE__, "::start_table : $tbl->{id}\n"
+    if $HTML::TableParser::Verbose;
+
   $self->process( $tbl->process );
 
   push @{$self->{Tables}}, $tbl;
@@ -936,7 +955,21 @@ sub end_table
 {
   my ( $self, $attr, $line ) = @_;
 
+
   my $tbl = pop @{$self->{Tables}};
+
+  print STDERR __PACKAGE__, "::end_table : $tbl->{id}\n"
+    if $HTML::TableParser::Verbose;
+
+  # the first table in the list is our sentinel table.  if we're about
+  # to delete it, it means that we've hit one too many </table> tags
+  # we delay the croak until after the pop so that the verbose error
+  # message prints something nice. no harm anyway as we're about to
+  # keel over and croak.
+  croak( __PACKAGE__, 
+	 ": $line: unbalanced <table> and </table> tags; too many </table> tags" )
+    if 0 == @{$self->{Tables}};
+
   undef $tbl;
 
   $self->process( $self->{Tables}[-1]->process );
