@@ -966,6 +966,7 @@ sub end_table
   # we delay the croak until after the pop so that the verbose error
   # message prints something nice. no harm anyway as we're about to
   # keel over and croak.
+
   croak( __PACKAGE__, 
 	 ": $line: unbalanced <table> and </table> tags; too many </table> tags" )
     if 0 == @{$self->{Tables}};
