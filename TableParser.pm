@@ -333,7 +333,11 @@ sub callback
   }
   else
   {
-    $self->{obj}->$call( $self->{id}, @_, $req->{udata} );
+    # if the object was destroyed before we get here (if it
+    # was created by us and thus was destroyed before us if
+    # there was an error), we can't call a method
+    $self->{obj}->$call( $self->{id}, @_, $req->{udata} )
+      if defined $self->{obj};
   }
 }
 
@@ -371,7 +375,8 @@ sub start_column
   # we really shouldn't be here if a row hasn't been started
   unless ( defined $self->{row} )
   {
-    $self->callback( 'warn', "<td> or <th> without <tr> at line $line\n" );
+    $self->callback( 'warn', $self->{id}, $line, 
+		     "<td> or <th> without <tr> at line $line\n" );
     $self->start_row( {}, $line );
   }
 
@@ -561,17 +566,21 @@ sub fix_texts
 
   for ( @$texts )
   {
+    local $HTML::Entities::entity2char{nbsp} = ' '
+      if $req->{DecodeNBSP};
+
     chomp $_ 
       if $req->{Chomp};
+
+    decode_entities( $_ )
+      if $req->{Decode};
+
 
     if ( $req->{Trim} )
     {
       s/^\s+//;
       s/\s+$//;
     }
-
-    decode_entities( $_ )
-      if $req->{Decode};
   }
 
   $texts;
@@ -607,6 +616,7 @@ our %Attr =  ( Trim => 0,
 	       Decode => 1,
 	       Chomp => 0,
 	       MultiMatch => 0,
+	       DecodeNBSP => 0,
 	     );
 our @Attr = keys %Attr;
 
@@ -789,14 +799,20 @@ sub tidy_reqs
 
 	if ( exists $req->{$method} )
 	{
-	  croak( "table request $nreq: can't have object & non-scalar $method" )
-	    if ref $req->{$method};
-
-	  my $call = $req->{$method};
-
-	  croak( "table request $nreq: class doesn't have method $call" )
-	    if ( exists $req->{obj} && ! $req->{obj}->can( $call ) )
-	      || !UNIVERSAL::can( $thing, $call );
+	  if ( defined $req->{$method} )
+	  {
+	    croak( "table request $nreq: can't have object & non-scalar $method" )
+	      if ref $req->{$method};
+	    
+	    my $call = $req->{$method};
+	    
+	    croak( "table request $nreq: class doesn't have method $call" )
+	      if ( exists $req->{obj} && ! $req->{obj}->can( $call ) )
+		|| !UNIVERSAL::can( $thing, $call );
+	  }
+	  
+	  # if $req->{$method} is undef, user must have explicitly
+	  # set it so, which is a signal to NOT call that method.
 	}
 	else
 	{
@@ -1071,7 +1087,7 @@ The callbacks are invoked as follows:
 
   row( $tbl_id, $line_no, \@data, $udata );
 
-  warn( $tbl_id, $message, $udata );
+  warn( $tbl_id, $line_no, $message, $udata );
 
   new( $tbl_id, $udata );
 
@@ -1088,6 +1104,13 @@ B<chomp()> the data
 =item Decode
 
 Run the data through B<HTML::Entities::decode>.
+
+=item DecodeNBSP
+
+Normally B<HTML::Entitites::decode> changes a non-breaking space into
+a character which doesn't seem to be matched by Perl's whitespace
+regexp.  Setting this attribute changes the HTML C<nbsp> character to
+a plain 'ol blank.
 
 =item Trim
 
@@ -1378,6 +1401,15 @@ set the callback attribute to a code reference:
 
 You don't have to provide all the callbacks.  You should not use both
 C<obj> and C<class> in the same table request.
+
+B<HTML::TableParser> automatically determines if your object
+or class has one of the required methods.  If you wish it I<not>
+to use a particular method, set it equal to C<undef>.  For example
+
+  %table_req = ( ..., obj => $obj, end => undef )
+
+indicates the object's B<end> method should not be called, even
+if it exists.
 
 You can specify arbitrary data to be passed to the callback functions
 via the C<udata> attribute:
