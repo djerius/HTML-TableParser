@@ -1,5 +1,9 @@
 Revision history for Perl extension HTML::TableParser.
 
+0.32  Tue Sep  3 11:32:20 EDT 2002
+        - extra </table> tags were not handled properly. it now
+	  croaks if it hits an extra </table> tag.
+
 0.31  Sat Apr 20 01:56:28 EDT 2002
         - was using features of Test::More v0.32 and didn't
 	  specify a version in Makefile.PL, causing problems
