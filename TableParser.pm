@@ -824,16 +824,8 @@ HTML::TableParser - Extract data from an HTML table
 =head1 SYNOPSIS
 
   use HTML::TableParser;
-  $p = HTML::TableParser->new( \@reqs, \%attr );
-  $p->parse_file( 'foo.html' );
 
   @reqs = (
-	   {
-	    id => 1,                      # table id
-	    cols => [ 'Object Type' ],  # column name exact match
-	    colre => [ qr/object/ ],      # column name RE match
-	    obj => $obj,                  # method callbacks
-	   },
 	   {
 	    id => 1.1,                    # id for embedded table
 	    hdr => \&header,              # function callback
@@ -841,8 +833,13 @@ HTML::TableParser - Extract data from an HTML table
 	    start => \&start,             # function callback
 	    end => \&end,                 # function callback
 	    udata => { Snack => 'Food' }, # arbitrary user data
-	   }
-
+	   },
+	   {
+	    id => 1,                      # table id
+	    cols => [ 'Object Type' ],    # column name exact match
+	    colre => [ qr/object/ ],      # column name RE match
+	    obj => $obj,                  # method callbacks
+	   },
 	  );
 
   # create parser object
