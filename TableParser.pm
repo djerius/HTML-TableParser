@@ -609,7 +609,7 @@ use HTML::Parser;
 
 our @ISA = qw(HTML::Parser);
 
-our $VERSION = '0.32';
+our $VERSION = '0.33';
 
 # Preloaded methods go here.
 
