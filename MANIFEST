@@ -1,8 +1,9 @@
 Changes
-LICENCE
+LICENSE
 MANIFEST
 Makefile.PL
 README
+THANKS
 TableParser.pm
 data/ned.Chomp.data
 data/ned.Decode.data
