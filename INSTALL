@@ -1,0 +1,9 @@
+lib=/proj/axaf/simul/lib/perl
+PERL5LIB=$lib
+export PERL5LIB
+
+perl Makefile.PL LIB=$lib PREFIX=$lib
+make
+make test
+make install
+#make distclean
