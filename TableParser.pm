@@ -1148,6 +1148,12 @@ This is the same function as in B<HTML::Parser>.
 
 =back
 
+=head1 LICENSE
+
+This software is released under the GNU General Public License.  You
+may find a copy at 
+
+   http://www.fsf.org/copyleft/gpl.html
 
 =head1 AUTHOR
 
