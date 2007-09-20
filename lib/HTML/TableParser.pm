@@ -31,7 +31,7 @@ use HTML::TableParser::Table;
 
 our @ISA = qw(HTML::Parser);
 
-our $VERSION = '0.34';
+our $VERSION = '0.35';
 
 # Preloaded methods go here.
 
@@ -896,7 +896,7 @@ may find a copy at
 
 =head1 AUTHOR
 
-Diab Jerius (djerius@cfa.harvard.edu)
+Diab Jerius (djerius@cpan.org)
 
 =head1 SEE ALSO
 

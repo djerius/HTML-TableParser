@@ -1,3 +1,54 @@
+2007-09-19  Diab Jerius  <djerius@cfa.harvard.edu>
+
+	Tag: 0.35
+
+2007-09-19 21:21 -0400  djerius  <djerius@cfa.harvard.edu>  (2856b191708a [tip])
+
+	* Makefile.PL:
+	switch to Module::Install
+
+2007-09-19 21:21 -0400  djerius  <djerius@cfa.harvard.edu>  (eae5f8ad6b1c)
+
+	* MANIFEST.SKIP:
+	more cruft to ignore
+
+2007-09-19 21:20 -0400  djerius  <djerius@cfa.harvard.edu>  (748e7437cd7a)
+
+	* LICENSE:
+	updated to GPL3
+
+2007-09-19 21:20 -0400  djerius  <djerius@cfa.harvard.edu>  (97709599c2ee)
+
+	* MANIFEST:
+	no longer necessary
+
+2007-09-19 21:19 -0400  djerius  <djerius@cfa.harvard.edu>  (628bc9e0d4a1)
+
+	* README:
+	updated to GPL3
+
+2007-09-19 21:18 -0400  djerius  <djerius@cfa.harvard.edu>  (df8f9fd02b7f)
+
+	* TableParser.pm, lib/HTML/TableParser.pm,
+	lib/HTML/TableParser/Table.pm:
+	separate modules into separate files. rename private methods to
+	satisfy pod-coverage
+
+2007-09-19 21:12 -0400  djerius  <djerius@cfa.harvard.edu>  (0cba157ce5f9)
+
+	* t/00-load.t, t/perlcritic.t, t/pod-coverage.t, t/pod.t:
+	add new tests for pod and perlcritic
+
+2007-09-19 21:12 -0400  djerius  <djerius@cfa.harvard.edu>  (c95a01dc6397)
+
+	* t/contents.t:
+	fix to work with Test::More version 0.71
+
+2007-09-19 21:46 +0000  dj  <dj>  (f60fb810ce45)
+
+	* ChangeLog:
+	2007-09-19 21:46:25 by dj added ChangeLog
+
 2002-09-07 01:32  tag V0_34
 
 2002-09-07 01:32  dj
