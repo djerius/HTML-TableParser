@@ -1,8 +1,10 @@
+^.hg
 \bRCS\b
 ^MANIFEST\.
 ^Makefile$
 ~$
 ^[^/]*\.html$
+\.bak$
 \.old$
 ^blib/
 ^MakeMaker-\d
