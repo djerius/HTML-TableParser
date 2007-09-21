@@ -29,6 +29,9 @@ use HTML::Parser;
 
 use HTML::TableParser::Table;
 
+## no critic ( ProhibitAccessOfPrivateData )
+
+
 our @ISA = qw(HTML::Parser);
 
 our $VERSION = '0.36';

@@ -7,6 +7,8 @@ use HTML::Entities;
 
 our $VERSION = '0.36';
 
+## no critic ( ProhibitAccessOfPrivateData )
+
 sub new
 {
   my $this = shift;
