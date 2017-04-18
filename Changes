@@ -1,5 +1,9 @@
 Revision history for Perl extension HTML::TableParser.
 
+0.41	2017-04-18T10:00:19-0400
+
+  * fix no . in @INC for perl 5.25+
+
 0.40	2014-08-22T14:02:33-0400
 
   * fix typo in docs RT#82224
