@@ -8,7 +8,7 @@ use File::Basename;
 
 BEGIN { use_ok( 'HTML::TableParser' ); }
 
-require 't/common.pl';
+require './t/common.pl';
 
 our $verbose = 0;
 our $create = 1;

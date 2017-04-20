@@ -2,7 +2,7 @@ use Test::More tests => 3;
 
 BEGIN { use_ok( 'HTML::TableParser' ); }
 
-require 't/common.pl';
+require './t/common.pl';
 
 my $header = [];
 my @parse_data;
