@@ -5,7 +5,7 @@ use warnings;
 
 use HTML::Entities;
 
-our $VERSION = '0.38';
+our $VERSION = '0.43';
 
 ## no critic ( ProhibitAccessOfPrivateData )
 
