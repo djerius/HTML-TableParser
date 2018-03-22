@@ -1,6 +1,6 @@
 package HTML::TableParser;
 
-# ABSTRACT: HTML::TableParser - Extract data from an HTML table
+# ABSTRACT: Extract data from an HTML table
 
 require 5.8.1;
 use strict;
