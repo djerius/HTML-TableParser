@@ -4,7 +4,7 @@ HTML::TableParser - HTML::TableParser - Extract data from an HTML table
 
 # VERSION
 
-version 0.43
+version 0.44
 
 # SYNOPSIS
 
