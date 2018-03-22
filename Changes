@@ -2,6 +2,13 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.43      2018-03-22 15:19:44-04:00 America/New_York
+
+   [ BUILD ]
+
+    * switch to Dist::Zilla
+
+
 0.42	2017-04-20T16:28:40-0400
 
   * second attempt at fixing no '.' in @inc for perl 5.25.11+
