@@ -1,4 +1,6 @@
-Revision history for Perl extension HTML::TableParser.
+Revision history for {{$dist->name}}
+
+{{$NEXT}}
 
 0.42	2017-04-20T16:28:40-0400
 

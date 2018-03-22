@@ -1,31 +1,14 @@
-# --8<--8<--8<--8<--
-#
-# Copyright (C) 2007 Smithsonian Astrophysical Observatory
-#
-# This file is part of HTML-TableParser
-#
-# HTML-TableParser is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or (at
-# your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# -->8-->8-->8-->8--
-
 package HTML::TableParser;
+
+# ABSTRACT: HTML::TableParser - Extract data from an HTML table
 
 require 5.8.1;
 use strict;
 use warnings;
 
-use Carp;
+our $VERSION = '0.43';
+
+use Carp ();
 use HTML::Parser;
 
 use HTML::TableParser::Table;
@@ -35,16 +18,14 @@ use HTML::TableParser::Table;
 
 our @ISA = qw(HTML::Parser);
 
-our $VERSION = '0.43';
-
 # Preloaded methods go here.
 
 our %Attr =  ( Trim => 0,
-	       Decode => 1,
-	       Chomp => 0,
-	       MultiMatch => 0,
-	       DecodeNBSP => 0,
-	     );
+               Decode => 1,
+               Chomp => 0,
+               MultiMatch => 0,
+               DecodeNBSP => 0,
+             );
 our @Attr = keys %Attr;
 
 our $Verbose = 0;
@@ -57,20 +38,20 @@ sub new
 
   my $self = $class->SUPER::new
                (
-		api_version => 3,
-		unbroken_text => 1,
-		start_h  => [ '_start', 'self, tagname, attr, line' ],
-		end_h    => [ '_end',   'self, tagname, attr, line' ],
-	       );
+                api_version => 3,
+                unbroken_text => 1,
+                start_h  => [ '_start', 'self, tagname, attr, line' ],
+                end_h    => [ '_end',   'self, tagname, attr, line' ],
+               );
 
-  croak( __PACKAGE__, ": must specify a table request" )
+  Carp::croak( __PACKAGE__, ": must specify a table request" )
     unless  defined $reqs and 'ARRAY' eq ref $reqs;
 
   my $attr = shift || {};
 
   my @notvalid = grep { ! exists $Attr{$_} } keys %$attr;
-  croak ( __PACKAGE__, ": Invalid attribute(s): '", 
-	  join(" ,'", @notvalid ), "'" )
+  Carp::croak ( __PACKAGE__, ": Invalid attribute(s): '",
+          join(" ,'", @notvalid ), "'" )
     if @notvalid;
 
   my %attr = ( %Attr, %$attr );
@@ -86,9 +67,9 @@ sub new
 }
 
 
-our @ReqAttr = ( qw( cols colre id idre class obj start end 
-		     hdr row warn udata ),
-		 keys %Attr );
+our @ReqAttr = ( qw( cols colre id idre class obj start end
+                     hdr row warn udata ),
+                 keys %Attr );
 our %ReqAttr = map { $_ => 1 } @ReqAttr;
 
 # convert table requests into something that HTML::TableParser::Table can
@@ -107,8 +88,8 @@ sub _tidy_reqs
     $nreq++;
 
     my @notvalid = grep { ! exists $ReqAttr{$_} } keys %$req;
-    croak (__PACKAGE__, ": table request $nreq: invalid attribute(s): '",
-	   join(" ,'", @notvalid ), "'" )
+    Carp::croak (__PACKAGE__, ": table request $nreq: invalid attribute(s): '",
+           join(" ,'", @notvalid ), "'" )
       if @notvalid;
 
     my $req_id = 0;
@@ -121,59 +102,59 @@ sub _tidy_reqs
 
       if ( exists $req->{$what} && defined $req->{$what} )
       {
-	my @reqs;
+        my @reqs;
 
-	my $ref = ref $req->{$what};
-	
-	if ( 'ARRAY' eq $ref )
-	{
-	  @reqs = @{$req->{$what}};
-	}
-	elsif ( 'Regexp' eq $ref  || 
-		'CODE' eq $ref ||
-		! $ref )
-	{
-	  @reqs = ( $req->{$what} );
-	}
-	else
-	{
-	  croak( __PACKAGE__, 
-		 ": table request $nreq: $what must be a scalar, arrayref, or coderef" );
-	}
-	
-	# now, check that we have legal things in there
-	my %attr = ();
+        my $ref = ref $req->{$what};
 
-	for my $match ( @reqs )
-	{
-	  my $ref = ref $match;
-	  croak( __PACKAGE__, 
-		 ": table request $nreq: illegal $what `$match': must be a scalar, regexp, or coderef" )
-	    unless defined $match && ! $ref || 'Regexp' eq $ref 
-	      || 'CODE' eq $ref ;
+        if ( 'ARRAY' eq $ref )
+        {
+          @reqs = @{$req->{$what}};
+        }
+        elsif ( 'Regexp' eq $ref  ||
+                'CODE' eq $ref ||
+                ! $ref )
+        {
+          @reqs = ( $req->{$what} );
+        }
+        else
+        {
+          Carp::croak( __PACKAGE__,
+                 ": table request $nreq: $what must be a scalar, arrayref, or coderef" );
+        }
 
-	  if ( ! $ref && $match eq '-' )
-	  {
-	    %attr = ( exclude => 1 );
-  	    next;
-	  }
+        # now, check that we have legal things in there
+        my %attr = ();
 
-	  if ( ! $ref && $match eq '--' )
-	  {
-	    %attr = ( skip => 1 );
-	    next;
-	  }
+        for my $match ( @reqs )
+        {
+          my $ref = ref $match;
+          Carp::croak( __PACKAGE__,
+                 ": table request $nreq: illegal $what `$match': must be a scalar, regexp, or coderef" )
+            unless defined $match && ! $ref || 'Regexp' eq $ref
+              || 'CODE' eq $ref ;
 
-	  if ( ! $ref && $match eq '+' )
-	  {
-	    %attr = ();
-	    next;
-	  }
+          if ( ! $ref && $match eq '-' )
+          {
+            %attr = ( exclude => 1 );
+            next;
+          }
 
-	  push @{$req{$what}}, { %attr, match => $match };
-	  %attr = ();
-	  $req_id++;
-	}
+          if ( ! $ref && $match eq '--' )
+          {
+            %attr = ( skip => 1 );
+            next;
+          }
+
+          if ( ! $ref && $match eq '+' )
+          {
+            %attr = ();
+            next;
+          }
+
+          push @{$req{$what}}, { %attr, match => $match };
+          %attr = ();
+          $req_id++;
+        }
       }
     }
 
@@ -185,33 +166,33 @@ sub _tidy_reqs
 
       if ( 'ARRAY' eq ref $req->{colre} )
       {
-	$colre = $req->{colre};
+        $colre = $req->{colre};
       }
       elsif ( ! ref $req->{colre} )
       {
-	$colre = [ $req->{colre} ];
+        $colre = [ $req->{colre} ];
       }
       else
       {
-	croak( __PACKAGE__, 
-	       ": table request $nreq: colre must be a scalar or arrayref" );
+        Carp::croak( __PACKAGE__,
+               ": table request $nreq: colre must be a scalar or arrayref" );
       }
-      
+
       for my $re ( @$colre )
       {
-	my $ref = ref $re;
-	
-	croak( __PACKAGE__, ": table request $nreq: colre must be a scalar" )
-	  unless ! $ref or  'Regexp' eq $ref;
-	push @{$req{cols}}, { include => 1, 
-			      match => 'Regexp' eq $ref ? $re : qr/$re/ };
-	$req_id++;
+        my $ref = ref $re;
+
+        Carp::croak( __PACKAGE__, ": table request $nreq: colre must be a scalar" )
+          unless ! $ref or  'Regexp' eq $ref;
+        push @{$req{cols}}, { include => 1,
+                              match => 'Regexp' eq $ref ? $re : qr/$re/ };
+        $req_id++;
       }
     }
 
 
-    croak( __PACKAGE__, 
-	   ": table request $nreq: must specify at least one id method" )
+    Carp::croak( __PACKAGE__,
+           ": table request $nreq: must specify at least one id method" )
       unless $req_id;
 
     $req{obj} = $req->{obj}
@@ -224,46 +205,46 @@ sub _tidy_reqs
     {
       if ( exists $req->{$method} && 'CODE' eq ref $req->{$method} )
       {
-	$req{$method} = $req->{$method};
+        $req{$method} = $req->{$method};
       }
 
       elsif ( exists $req{obj} || exists $req{class})
       {
-	my $thing = exists $req{obj} ? $req{obj} : $req{class};
+        my $thing = exists $req{obj} ? $req{obj} : $req{class};
 
-	if ( exists $req->{$method} )
-	{
-	  if ( defined $req->{$method} )
-	  {
-	    croak( __PACKAGE__, 
-		   ": table request $nreq: can't have object & non-scalar $method" )
-	      if ref $req->{$method};
-	    
-	    my $call = $req->{$method};
-	    
-	    croak( __PACKAGE__, 
-		   ": table request $nreq: class doesn't have method $call" )
-	      if ( exists $req->{obj} && ! $req->{obj}->can( $call ) )
-		|| !UNIVERSAL::can( $thing, $call );
-	  }
-	  
-	  # if $req->{$method} is undef, user must have explicitly
-	  # set it so, which is a signal to NOT call that method.
-	}
-	else
-	{
-	  $req{$method} = $method
-	    if UNIVERSAL::can( $thing, $method );
-	}
+        if ( exists $req->{$method} )
+        {
+          if ( defined $req->{$method} )
+          {
+            Carp::croak( __PACKAGE__,
+                   ": table request $nreq: can't have object & non-scalar $method" )
+              if ref $req->{$method};
+
+            my $call = $req->{$method};
+
+            Carp::croak( __PACKAGE__,
+                   ": table request $nreq: class doesn't have method $call" )
+              if ( exists $req->{obj} && ! $req->{obj}->can( $call ) )
+                || !UNIVERSAL::can( $thing, $call );
+          }
+
+          # if $req->{$method} is undef, user must have explicitly
+          # set it so, which is a signal to NOT call that method.
+        }
+        else
+        {
+          $req{$method} = $method
+            if UNIVERSAL::can( $thing, $method );
+        }
       }
       elsif( exists $req->{$method} )
       {
-	croak( __PACKAGE__, ": invalid callback for $method" );
+        Carp::croak( __PACKAGE__, ": invalid callback for $method" );
       }
     }
 
     # last minute cleanups for things that don't fit in the above loop
-    croak( __PACKAGE__, ": must specify valid constructor for class $req->{class}" )
+    Carp::croak( __PACKAGE__, ": must specify valid constructor for class $req->{class}" )
       if exists $req{class} && ! exists $req{new};
 
 
@@ -311,8 +292,8 @@ sub _process
 
 
 our %trans = ( tr => 'row',
-	       th => 'header',
-	       td => 'column' );
+               th => 'header',
+               td => 'column' );
 
 sub _start
 {
@@ -362,11 +343,9 @@ sub _start_table
 {
   my ( $self, $attr, $line ) = @_;
 
-  my $otbl = $self->{Tables}[-1];
-
-  my $tbl = HTML::TableParser::Table->new( $self, 
-					   $self->{Tables}[-1]->ids,
-					   $self->{reqs}, $line );
+  my $tbl = HTML::TableParser::Table->new( $self,
+                                           $self->{Tables}[-1]->ids,
+                                           $self->{reqs}, $line );
 
   print STDERR __PACKAGE__, "::_start_table : $tbl->{id}\n"
     if $HTML::TableParser::Verbose;
@@ -393,8 +372,8 @@ sub _end_table
   # message prints something nice. no harm anyway as we're about to
   # keel over and croak.
 
-  croak( __PACKAGE__, 
-	 ": $line: unbalanced <table> and </table> tags; too many </table> tags" )
+  Carp::croak( __PACKAGE__,
+         ": $line: unbalanced <table> and </table> tags; too many </table> tags" )
     if 0 == @{$self->{Tables}};
 
   undef $tbl;
@@ -410,43 +389,37 @@ sub _text
   $self->{Tables}[-1]->text( $text );
 }
 
-
-
-
 1;
+
+# COPYRIGHT
+
 __END__
 
-=pod
-
-
-=head1 NAME
-
-HTML::TableParser - Extract data from an HTML table
 
 =head1 SYNOPSIS
 
   use HTML::TableParser;
 
   @reqs = (
-	   {
-	    id => 1.1,                    # id for embedded table
-	    hdr => \&header,              # function callback
-	    row => \&row,                 # function callback
-	    start => \&start,             # function callback
-	    end => \&end,                 # function callback
-	    udata => { Snack => 'Food' }, # arbitrary user data
-	   },
-	   {
-	    id => 1,                      # table id
-	    cols => [ 'Object Type',
-		      qr/object/ ],       # column name matches
-	    obj => $obj,                  # method callbacks
-	   },
-	  );
+           {
+            id => 1.1,                    # id for embedded table
+            hdr => \&header,              # function callback
+            row => \&row,                 # function callback
+            start => \&start,             # function callback
+            end => \&end,                 # function callback
+            udata => { Snack => 'Food' }, # arbitrary user data
+           },
+           {
+            id => 1,                      # table id
+            cols => [ 'Object Type',
+                      qr/object/ ],       # column name matches
+            obj => $obj,                  # method callbacks
+           },
+          );
 
   # create parser object
-  $p = HTML::TableParser->new( \@reqs, 
-		   { Decode => 1, Trim => 1, Chomp => 1 } );
+  $p = HTML::TableParser->new( \@reqs,
+                   { Decode => 1, Trim => 1, Chomp => 1 } );
   $p->parse_file( 'foo.html' );
 
 
@@ -605,7 +578,7 @@ The columns will be:
   Velocity/Redshift z
   Velocity/Redshift Qual
 
-Row data are derived from cells delimited by the B<E<lt>tdE<gt>> and 
+Row data are derived from cells delimited by the B<E<lt>tdE<gt>> and
 B<E<lt>/tdE<gt>> tags.  Cells which span more than one column or row are
 handled correctly, i.e. the values are duplicated in the appropriate
 places.
@@ -697,7 +670,7 @@ C<qr//> operator.
 =item subroutine
 
   id => \&my_match_subroutine
-  id => sub { my ( $id, $oids ) = @_ ; 
+  id => sub { my ( $id, $oids ) = @_ ;
            $oids[0] > 3 && $oids[1] < 2 }
 
 Here C<id> is assigned a coderef to a subroutine which returns
@@ -889,21 +862,3 @@ multiple tables in the document.  Ordinarily, a request will process
 a single table only (even C<DEFAULT> requests).
 Set it to a non-zero value to allow the request to handle more than
 one table.
-
-
-=head1 LICENSE
-
-This software is released under the GNU General Public License.  You
-may find a copy at 
-
-   http://www.fsf.org/copyleft/gpl.html
-
-=head1 AUTHOR
-
-Diab Jerius (djerius@cpan.org)
-
-=head1 SEE ALSO
-
-L<HTML::Parser>, L<HTML::TableExtract>.
-
-=cut

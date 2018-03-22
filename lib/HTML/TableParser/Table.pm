@@ -1,13 +1,19 @@
 package HTML::TableParser::Table;
 
+# ABSTRACT: support class for HTML::TableParser
+
 use strict;
 use warnings;
 
-use HTML::Entities;
+use HTML::Entities qw();
 
 our $VERSION = '0.43';
 
 ## no critic ( ProhibitAccessOfPrivateData )
+
+=method new
+
+=cut
 
 sub new
 {
@@ -16,19 +22,19 @@ sub new
   my $class = ref($this) || $this;
 
   my $self = {
-	      data 	=> [[]],	# row data (for overlapping rows)
-	      row	=> undef,	# row info
-	      col	=> undef,	# column info
-	      hdr	=> undef,	# accumulated header info
-	      hdr_row 	=> 0,		# index of header row
-	      hdr_line	=> undef,	# line in file of header row
-	      in_hdr	=> 0,		# are we in a header row?
-	      prev_hdr	=> 0,		# was the previous row a header row?
-	      line	=> undef,	# line in file of current row
-	      start_line => undef,	# line in file of table start
-	      req	=> undef,	# the matching table request
-	      exclreqs  => {},		# the requests which exlude this table
-	     };
+              data      => [[]],        # row data (for overlapping rows)
+              row       => undef,       # row info
+              col       => undef,       # column info
+              hdr       => undef,       # accumulated header info
+              hdr_row   => 0,           # index of header row
+              hdr_line  => undef,       # line in file of header row
+              in_hdr    => 0,           # are we in a header row?
+              prev_hdr  => 0,           # was the previous row a header row?
+              line      => undef,       # line in file of current row
+              start_line => undef,      # line in file of table start
+              req       => undef,       # the matching table request
+              exclreqs  => {},          # the requests which exlude this table
+             };
 
   bless $self, $class;
 
@@ -61,13 +67,16 @@ sub new
     # for column name matches, we don't want to do the callback;
     # in that case $self->{req} isn't set and callback() won't
     # actually make the call.
-    $self->callback( 'start', $self->{start_line} ) 
-		     if $self->{process};
+    $self->callback( 'start', $self->{start_line} )
+                     if $self->{process};
   }
 
   $self;
 }
 
+=method match_id
+
+=cut
 
 sub match_id
 {
@@ -86,8 +95,8 @@ sub match_id
   my ( $skip, $req );
 
   ( $skip, $req ) =
-    req_match_id( $self->{reqs}, $self->{id}, $self->{oids}, 
-		  $self->{exclreqs} );
+    req_match_id( $self->{reqs}, $self->{id}, $self->{oids},
+                  $self->{exclreqs} );
 
   # did we match a skip table request?
   return if $skip;
@@ -126,6 +135,10 @@ sub match_id
   # 4. out of luck. no match.
 }
 
+=method req_match_id
+
+=cut
+
 # determine if a request matches an id.  requests should
 # be real objects, but until then...
 sub req_match_id
@@ -148,19 +161,19 @@ sub req_match_id
       # is this a subroutine to call?
       if ( 'CODE' eq ref $cmp->{match} )
       {
-	next unless $cmp->{match}->($id, $oids );
+        next unless $cmp->{match}->($id, $oids );
       }
 
       # regular expression
       elsif( 'Regexp' eq ref $cmp->{match} )
       {
-	next unless $id =~ /$cmp->{match}/;
+        next unless $id =~ /$cmp->{match}/;
       }
 
       # a direct match?
       else
       {
-	next unless $id eq $cmp->{match};
+        next unless $id eq $cmp->{match};
       }
 
       # we get here only if there was a match.
@@ -169,8 +182,8 @@ sub req_match_id
       # request.
       if ( $cmp->{exclude} )
       {
-	$excluded->{$req}++;
-	next;
+        $excluded->{$req}++;
+        next;
       }
 
       # return match, plus whether this is a global skip request
@@ -180,6 +193,10 @@ sub req_match_id
 
   ( 0, undef );
 }
+
+=method req_match_cols
+
+=cut
 
 # determine if a request matches a column.  requests should
 # be real objects, but until then...
@@ -201,19 +218,19 @@ sub req_match_cols
       # is this a subroutine to call?
       if ( 'CODE' eq ref $cmp->{match} )
       {
-	next unless $cmp->{match}->( $id, $oids, \@fix_cols );
+        next unless $cmp->{match}->( $id, $oids, \@fix_cols );
       }
 
       # regular expression
       elsif( 'Regexp' eq ref $cmp->{match} )
       {
-	next unless grep { /$cmp->{match}/ } @fix_cols;
+        next unless grep { /$cmp->{match}/ } @fix_cols;
       }
 
       # a direct match?
       else
       {
-	next unless grep { $_ eq $cmp->{match} } @fix_cols;
+        next unless grep { $_ eq $cmp->{match} } @fix_cols;
       }
 
       # we get here only if there was a match
@@ -231,6 +248,10 @@ sub req_match_cols
   (0, undef);
 }
 
+=method match_hdr
+
+=cut
+
 # we've pulled in a header; does it match against one of the requests?
 sub match_hdr
 {
@@ -243,7 +264,7 @@ sub match_hdr
 
   # 1. check header matches
   my ( $skip, $req ) = req_match_cols( $self->{reqs}, \@cols, $self->{id},
-				       $self->{oids} );
+                                       $self->{oids} );
   # did we match a skip table request?
   return 0 if $skip;
 
@@ -255,7 +276,7 @@ sub match_hdr
 
 
   # 2. DEFAULT match
-  ( $skip, $req ) = 
+  ( $skip, $req ) =
     req_match_id( $self->{reqs}, 'DEFAULT', $self->{oids}, $self->{exclreqs} );
 
   # did we match a skip table request? Does this make sense for DEFAULT?
@@ -271,6 +292,10 @@ sub match_hdr
 
   0;
 }
+
+=method match_req
+
+=cut
 
 sub match_req
 {
@@ -293,6 +318,10 @@ sub match_req
 }
 
 
+=method callback
+
+=cut
+
 # generic call back interface.  handle method calls as well as
 # subroutine calls.
 sub callback
@@ -300,7 +329,7 @@ sub callback
   my $self = shift;
   my $method = shift;
 
-  return unless 
+  return unless
     defined $self->{req} && exists $self->{req}->{$method};
 
   my $req = $self->{req};
@@ -322,6 +351,11 @@ sub callback
 
 
 # handle <th>
+
+=method start_header
+
+=cut
+
 sub start_header
 {
   my $self = shift;
@@ -335,6 +369,11 @@ sub start_header
 
 
 # handle </th>
+
+=method end_header
+
+=cut
+
 sub end_header
 {
   my $self = shift;
@@ -342,6 +381,10 @@ sub end_header
 }
 
 # handle <td>
+=method start_column
+
+=cut
+
 sub start_column
 {
   my $self = shift;
@@ -354,8 +397,8 @@ sub start_column
   # we really shouldn't be here if a row hasn't been started
   unless ( defined $self->{row} )
   {
-    $self->callback( 'warn', $self->{id}, $line, 
-		     "<td> or <th> without <tr> at line $line\n" );
+    $self->callback( 'warn', $self->{id}, $line,
+                     "<td> or <th> without <tr> at line $line\n" );
     $self->start_row( {}, $line );
   }
 
@@ -376,6 +419,11 @@ sub start_column
 }
 
 # handle </td>
+
+=method end_column
+
+=cut
+
 sub end_column
 {
   my $self = shift;
@@ -390,6 +438,10 @@ sub end_column
   $self->{text} = undef;
 }
 
+=method start_row
+
+=cut
+
 sub start_row
 {
   my $self = shift;
@@ -402,6 +454,10 @@ sub start_row
   $self->{line} = $line;
 }
 
+
+=method end_row
+
+=cut
 
 sub end_row
 {
@@ -418,7 +474,6 @@ sub end_row
   {
 
     my $cn = 0;
-    my $rn = 0;
     foreach my $col ( @{$self->{row}} )
     {
       # do this just in case there are newlines and we're concatenating
@@ -433,14 +488,14 @@ sub end_row
       # note that header is stored as one array per column, not row!
       for ( my $cnn = 0 ; $cnn < $col->{attr}{colspan} ; $cnn++, $cn++ )
       {
-	$self->{hdr}[$cn] ||= [];
-	$self->{hdr}[$cn][$self->{hdr_row}] = $col->{text};
-	
-	# put empty placeholders in the rest of the rows
-	for ( my $rnn = 1 ; $rnn < $col->{attr}{rowspan} ; $rnn++ )
-	{
-	  $self->{hdr}[$cn][$rnn + $self->{hdr_row}] = '';
-	}
+        $self->{hdr}[$cn] ||= [];
+        $self->{hdr}[$cn][$self->{hdr_row}] = $col->{text};
+
+        # put empty placeholders in the rest of the rows
+        for ( my $rnn = 1 ; $rnn < $col->{attr}{rowspan} ; $rnn++ )
+        {
+          $self->{hdr}[$cn][$rnn + $self->{hdr_row}] = '';
+        }
       }
     }
 
@@ -449,7 +504,6 @@ sub end_row
   else
   {
     my $cn = 0;
-    my $rn = 0;
     foreach my $col ( @{$self->{row}} )
     {
       # need to find the first undefined column
@@ -457,11 +511,11 @@ sub end_row
 
       for ( my $cnn = 0 ; $cnn < $col->{attr}{colspan} ; $cnn++, $cn++ )
       {
-	for ( my $rnn = 0 ; $rnn < $col->{attr}{rowspan} ; $rnn++ )
-	{
-	  $self->{data}[$rnn] ||= [];
-	  $self->{data}[$rnn][$cn] = $col->{text};
-	}
+        for ( my $rnn = 0 ; $rnn < $col->{attr}{rowspan} ; $rnn++ )
+        {
+          $self->{data}[$rnn] ||= [];
+          $self->{data}[$rnn][$cn] = $col->{text};
+        }
       }
     }
   }
@@ -471,8 +525,8 @@ sub end_row
     if ! $self->{in_hdr} && $self->{prev_hdr};
 
   # output the data if we're not in a header
-  $self->callback( 'row', $self->{line}, 
-		   fix_texts( $self->{req}, shift @{$self->{data}} ) )
+  $self->callback( 'row', $self->{line},
+                   fix_texts( $self->{req}, shift @{$self->{data}} ) )
       unless $self->{in_hdr};
 
   $self->{in_hdr} = 0;
@@ -481,6 +535,11 @@ sub end_row
 
 # collect the possible multiple header rows into one array and
 # send it off
+
+=method finish_header
+
+=cut
+
 sub finish_header
 {
   my $self = shift;
@@ -539,6 +598,10 @@ DESTROY
   }
 }
 
+=method fix_texts
+
+=cut
+
 sub fix_texts
 {
   my ( $req, $texts  ) = @_;
@@ -551,10 +614,10 @@ sub fix_texts
     $HTML::Entities::entity2char{nbsp} = ' '
       if $req->{DecodeNBSP};
 
-    chomp $_ 
+    chomp $_
       if $req->{Chomp};
 
-    decode_entities( $_ )
+    HTML::Entities::decode_entities( $_ )
       if $req->{Decode};
 
 
@@ -568,6 +631,10 @@ sub fix_texts
   $texts;
 }
 
+=method text
+
+=cut
+
 sub text
 {
   my $self = shift;
@@ -575,17 +642,30 @@ sub text
   $self->{text} = shift;
 }
 
+=method id
+
+=cut
+
 sub id  { $_[0]->{id} }
+
+=method ids
+
+=cut
+
 sub ids { $_[0]->{ids} }
+
+
+=method process
+
+=cut
+
 sub process { $_[0]->{process} }
 
 1;
 
+# COPYRIGHT
+
 __END__
-
-=head1 NAME
-
-HTML::TableParser::Table - support class for HTML::TableParser
 
 =head1 DESCRIPTION
 
@@ -615,20 +695,3 @@ The class handles missing C</tr>, C</td>, and C</th> tags.  As such
 (especially when handling multi-row headers) user callbacks may
 be slightly delayed (and data cached).  It also handles rows
 with overlapping columns
-
-=head1 LICENSE
-
-This software is released under the GNU General Public License.  You
-may find a copy at 
-
-   http://www.fsf.org/copyleft/gpl.html
-
-=head1 AUTHOR
-
-Diab Jerius (djerius@cpan.org)
-
-=head1 SEE ALSO
-
-L<HTML::Parser>, L<HTML::TableExtract>.
-
-=cut
